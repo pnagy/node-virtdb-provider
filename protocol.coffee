@@ -41,7 +41,13 @@ class Protocol
         @column_socket.bind connectionString, onBound name, @column_socket, 'COLUMN', 'PUB_SUB'
 
     @sendMetaData = (data) =>
-        @metadata_socket.send proto_meta.serialize data, "virtdb.interface.pb.MetaData"
+        if not @metadata_socket?
+            throw new Error("metadata_socket is not yet initialized")
+        if not data?
+            throw new Error("sendMetaData called with invalid argument: ", data)
+        serializedData = proto_meta.serialize data, "virtdb.interface.pb.MetaData"
+        proto_meta.parse serializedData, "virtdb.interface.pb.MetaData" # call it only for sanity check as serialize seems to be too permissive
+        @metadata_socket.send serializedData
 
     @sendColumn = (columnChunk) =>
         @column_socket.send columnChunk.QueryId, zmq.ZMQ_SNDMORE
@@ -49,7 +55,9 @@ class Protocol
 
     @close = () =>
         @metadata_socket?.close()
+        @metadata_socket = null
         @column_socket?.close()
+        @column_socket = null
 
 
 
