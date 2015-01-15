@@ -1,16 +1,17 @@
 fs          = require 'fs'
 zmq         = require 'zmq'
-protobuf    = require 'node-protobuf'
+protobuf    = require 'virtdb-proto'
 
-proto_meta           = new protobuf(fs.readFileSync('../../src/common/proto/meta_data.pb.desc'))
-proto_data           = new protobuf(fs.readFileSync('../../src/common/proto/data.pb.desc'))
-
+proto_meta = protobuf.meta_data
+proto_data = protobuf.data
 
 class Protocol
     @metadata_socket = null
     @column_socket = null
 
     @metaDataServer = (name, connectionString, onRequest, onBound) =>
+        if not onBound?
+            return
         @metadata_socket = zmq.socket "rep"
         @metadata_socket.on "message", (request) =>
             try
