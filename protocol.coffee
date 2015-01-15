@@ -11,7 +11,7 @@ class Protocol
 
     @metaDataServer = (name, connectionString, onRequest, onBound) =>
         if not onBound?
-            return
+            throw new Error("Missing required parameter: onBound")
         @metadata_socket = zmq.socket "rep"
         @metadata_socket.on "message", (request) =>
             try
@@ -20,7 +20,10 @@ class Protocol
             catch ex
                 @metadata_socket.send 'err'
             return
-        @metadata_socket.bind connectionString, onBound name, @metadata_socket, 'META_DATA', 'REQ_REP'
+        @metadata_socket.bind connectionString, (err) =>
+            if err?
+                throw err
+            onBound name, @metadata_socket, 'META_DATA', 'REQ_REP'
 
     @queryServer = (name, connectionString, onQuery, onBound) =>
         @query_socket = zmq.socket "pull"
