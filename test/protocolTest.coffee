@@ -1,6 +1,10 @@
 Protocol = require "../protocol"
 zmq     = require 'zmq'
 
+protobuf    = require 'virtdb-proto'
+proto_meta = protobuf.meta_data
+proto_data = protobuf.data
+
 chai = require "chai"
 should = chai.should()
 sinon = require "sinon"
@@ -72,6 +76,24 @@ describe "Protocol for meta_data", ->
         connectionCallback = sandbox.spy()
         Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
         Protocol.sendMetaData([]) # empty array is valid message here
+        socket.sent.should.be.true
+
+    it "should be able to receive meta_data requests", ->
+        dataCallback = sandbox.spy()
+        connectionCallback = sandbox.spy()
+        Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
+        request =
+            Name: "name"
+            WithFields: false
+        socket.callback(proto_meta.serialize(request, "virtdb.interface.pb.MetaDataRequest"))
+        dataCallback.should.have.been.calledWith(request)
+
+    it "should send reply even if request is malformed as REQ_REP sockets are picky for this", ->
+        dataCallback = sandbox.spy()
+        connectionCallback = sandbox.spy()
+        Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
+        request = {}
+        socket.callback(proto_meta.serialize(request, "virtdb.interface.pb.MetaData"))
         socket.sent.should.be.true
 
 describe "Protocol for column", ->
@@ -153,3 +175,16 @@ describe "Protocol for query", ->
         Protocol.queryServer "name", "connectionString", dataCallback, connectionCallback
         socket.bound.should.be.true;
         connectionCallback.should.have.been.calledWith("name", socket, 'QUERY', 'PUSH_PULL')
+
+    it "should be able to receive queries", ->
+        dataCallback = sandbox.spy()
+        connectionCallback = sandbox.spy()
+        Protocol.queryServer "name", "connectionString", dataCallback, connectionCallback
+        query =
+            QueryId: "queryid"
+            Table: "table"
+            Fields: []
+            Filter: []
+            SeqNos: []
+        socket.callback(proto_data.serialize(query, "virtdb.interface.pb.Query"))
+        dataCallback.should.have.been.calledWith(query)

@@ -74,6 +74,8 @@ class Protocol
         @metadata_socket = null
         @column_socket?.close()
         @column_socket = null
+        @query_socket?.close()
+        @query_socket = null
 
 
 
