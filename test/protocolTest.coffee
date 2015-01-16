@@ -74,6 +74,60 @@ describe "Protocol for meta_data", ->
         Protocol.sendMetaData([]) # empty array is valid message here
         socket.sent.should.be.true
 
+describe "Protocol for column", ->
+    sandbox = null
+    socket = null
+    connectStub = null
+
+    beforeEach =>
+        sandbox = sinon.sandbox.create()
+        socket = new SocketStub
+        connectStub = sandbox.stub zmq, "socket", (type) ->
+            type.should.equal 'pub'
+            return socket
+
+    afterEach =>
+        sandbox.restore()
+        Protocol.close()
+
+    it "should return error if listen called without onBound handler", ->
+        Protocol.columnServer.should.throw(Error)
+
+    it "should start listening if handler is given", ->
+        connectionCallback = sandbox.spy()
+        Protocol.columnServer "name", "connectionString", connectionCallback
+        socket.bound.should.be.true;
+        connectionCallback.should.have.been.calledWith("name", socket, 'COLUMN', 'PUB_SUB')
+
+    it "should report error is sending meta_data without listening", ->
+        Protocol.sendColumn.should.throw(Error)
+
+    it "should report error when trying to send empty data", ->
+        connectionCallback = sandbox.spy()
+        Protocol.columnServer "name", "connectionString", connectionCallback
+        Protocol.sendColumn.should.throw(Error)
+
+    it "should report error when trying to send malformed data", ->
+        cb = () ->
+            Protocol.sendColumn(
+                QueryId: 'error'
+            )
+        connectionCallback = sandbox.spy()
+        Protocol.columnServer "name", "connectionString", connectionCallback
+        cb.should.throw(Error)
+
+    it "should be able to send meta_data", ->
+        connectionCallback = sandbox.spy()
+        Protocol.columnServer "name", "connectionString", connectionCallback
+        Protocol.sendColumn(
+            QueryId: "id"
+            Name: "name"
+            Data:
+                Type: 'STRING'
+            SeqNo: 0
+        ) # em1pty array is valid message here
+        socket.sent.should.be.true
+
 describe "Protocol for query", ->
     sandbox = null
     socket = null

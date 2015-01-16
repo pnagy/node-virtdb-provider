@@ -41,9 +41,14 @@ class Protocol
                 throw err
             onBound name, @query_socket, 'QUERY', 'PUSH_PULL'
 
-    @columnServer = (name, connectionString, callback, onBound) =>
+    @columnServer = (name, connectionString, onBound) =>
+        if not onBound?
+            throw new Error("Missing required parameter: onBound")
         @column_socket = zmq.socket "pub"
-        @column_socket.bind connectionString, onBound name, @column_socket, 'COLUMN', 'PUB_SUB'
+        @column_socket.bind connectionString, (err) =>
+            if err?
+                throw err
+            onBound name, @column_socket, 'COLUMN', 'PUB_SUB'
 
     @sendMetaData = (data) =>
         if not @metadata_socket?
@@ -55,8 +60,14 @@ class Protocol
         @metadata_socket.send serializedData
 
     @sendColumn = (columnChunk) =>
+        if not @column_socket?
+            throw new Error("column_socket is not yet initialized")
+        if not columnChunk?
+            throw new Error("sendColumn called with invalid argument: ", columnChunk)
+        serializedData = proto_data.serialize columnChunk, "virtdb.interface.pb.Column"
+        proto_data.parse serializedData, "virtdb.interface.pb.Column" # call it only for sanity check as serialize seems to be too permissive
         @column_socket.send columnChunk.QueryId, zmq.ZMQ_SNDMORE
-        @column_socket.send proto_data.serialize columnChunk, "virtdb.interface.pb.Column"
+        @column_socket.send serializedData
 
     @close = () =>
         @metadata_socket?.close()
