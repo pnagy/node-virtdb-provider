@@ -73,3 +73,29 @@ describe "Protocol for meta_data", ->
         Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
         Protocol.sendMetaData([]) # empty array is valid message here
         socket.sent.should.be.true
+
+describe "Protocol for query", ->
+    sandbox = null
+    socket = null
+    connectStub = null
+
+    beforeEach =>
+        sandbox = sinon.sandbox.create()
+        socket = new SocketStub
+        connectStub = sandbox.stub zmq, "socket", (type) ->
+            type.should.equal 'pull'
+            return socket
+
+    afterEach =>
+        sandbox.restore()
+        Protocol.close()
+
+    it "should return error if listen called without onBound handler", ->
+        Protocol.queryServer.should.throw(Error)
+
+    it "should start listening if handler is given", ->
+        dataCallback = (data) ->
+        connectionCallback = sandbox.spy()
+        Protocol.queryServer "name", "connectionString", dataCallback, connectionCallback
+        socket.bound.should.be.true;
+        connectionCallback.should.have.been.calledWith("name", socket, 'QUERY', 'PUSH_PULL')

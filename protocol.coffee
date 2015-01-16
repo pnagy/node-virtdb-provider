@@ -26,6 +26,8 @@ class Protocol
             onBound name, @metadata_socket, 'META_DATA', 'REQ_REP'
 
     @queryServer = (name, connectionString, onQuery, onBound) =>
+        if not onBound?
+            throw new Error("Missing required parameter: onBound")
         @query_socket = zmq.socket "pull"
         @query_socket.on "message", (request) =>
             try
@@ -34,7 +36,10 @@ class Protocol
             catch ex
                 @query_socket.send 'err'
             return
-        @query_socket.bind connectionString, onBound name, @query_socket, 'QUERY', 'PUSH_PULL'
+        @query_socket.bind connectionString, (err) =>
+            if err?
+                throw err
+            onBound name, @query_socket, 'QUERY', 'PUSH_PULL'
 
     @columnServer = (name, connectionString, callback, onBound) =>
         @column_socket = zmq.socket "pub"
