@@ -44,15 +44,14 @@ describe "DataProvider", ->
 
     it "should be able to register metadata request callback", ->
         provider = new Provider "test-provider", "localhost"
-        cb = () ->
-            provider.onMetaDataRequest () ->
-        cb.should.not.throw
+        provider.onMetaDataRequest.should.not.throw
+        provider.onMetaDataRequest () ->
+
 
     it "should be able to register query request callback", ->
         provider = new Provider "test-provider", "localhost"
-        cb = () ->
-            provider.onQuery () ->
-        cb.should.not.throw
+        provider.onQuery.should.not.throw
+        provider.onQuery () ->
 
     # it "should be able to send metadata", ->
     #     sendMethod = sinon.spy Protocol, "sendMetaData"
