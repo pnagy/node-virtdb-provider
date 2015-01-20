@@ -53,6 +53,13 @@ describe "DataProvider", ->
         provider.onQuery.should.not.throw
         provider.onQuery () ->
 
+    it "should close connector.close when close is called", ->
+        connectorClose = sinon.spy VirtDBConnector, "close"
+        provider = new Provider "test-provider", "localhost"
+        provider.close()
+        connectorClose.should.have.been.called
+
+
     # it "should be able to send metadata", ->
     #     sendMethod = sinon.spy Protocol, "sendMetaData"
     #     provider = new Provider "test-provider", "localhost"
