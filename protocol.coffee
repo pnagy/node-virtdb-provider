@@ -41,9 +41,11 @@ class Protocol
                 throw err
             onBound name, @query_socket, 'QUERY', 'PUSH_PULL'
 
-    @columnServer = (name, connectionString, onBound) =>
+    @columnServer = (name, connectionString, callback, onBound) =>
         if not onBound?
             throw new Error("Missing required parameter: onBound")
+        if callback?
+            throw new Error("ColumnServer is a write only protocol and must not be called with message callback.")
         @column_socket = zmq.socket "pub"
         @column_socket.bind connectionString, (err) =>
             if err?

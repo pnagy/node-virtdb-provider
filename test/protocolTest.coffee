@@ -41,7 +41,9 @@ describe "Protocol for meta_data", ->
         Protocol.close()
 
     it "should return error if listen called without onBound handler", ->
-        Protocol.metaDataServer.should.throw(Error)
+        ( ->
+            Protocol.metaDataServer()
+        ).should.throw "Missing required parameter: onBound"
 
     it "should start listening if handler is given", ->
         dataCallback = (data) ->
@@ -51,25 +53,29 @@ describe "Protocol for meta_data", ->
         connectionCallback.should.have.been.calledWith("name", socket, 'META_DATA', 'REQ_REP')
 
     it "should report error is sending meta_data without listening", ->
-        Protocol.sendMetaData.should.throw(Error)
+        ( ->
+            Protocol.sendMetaData()
+        ).should.throw "metadata_socket is not yet initialized"
 
     it "should report error when trying to send empty data", ->
         dataCallback = (data) ->
         connectionCallback = sandbox.spy()
         Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
-        Protocol.sendMetaData.should.throw(Error)
+        ( ->
+            Protocol.sendMetaData()
+        ).should.throw "sendMetaData called with invalid argument:"
 
     it "should report error when trying to send malformed data", ->
-        cb = () ->
+        dataCallback = (data) ->
+        connectionCallback = sandbox.spy()
+        Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
+        ( ->
             Protocol.sendMetaData(
                 Tables: [
                     Schema: 'error'
                 ]
             )
-        dataCallback = (data) ->
-        connectionCallback = sandbox.spy()
-        Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
-        cb.should.throw(Error)
+        ).should.throw "Malformed protocol buffer"
 
     it "should be able to send meta_data", ->
         dataCallback = (data) ->
@@ -113,34 +119,40 @@ describe "Protocol for column", ->
         Protocol.close()
 
     it "should return error if listen called without onBound handler", ->
-        Protocol.columnServer.should.throw(Error)
+        ( ->
+            Protocol.columnServer()
+        ).should.throw "Missing required parameter: onBound"
 
     it "should start listening if handler is given", ->
         connectionCallback = sandbox.spy()
-        Protocol.columnServer "name", "connectionString", connectionCallback
+        Protocol.columnServer "name", "connectionString", null, connectionCallback
         socket.bound.should.be.true;
         connectionCallback.should.have.been.calledWith("name", socket, 'COLUMN', 'PUB_SUB')
 
     it "should report error is sending meta_data without listening", ->
-        Protocol.sendColumn.should.throw(Error)
+        ( ->
+            Protocol.sendColumn()
+        ).should.throw "column_socket is not yet initialized"
 
     it "should report error when trying to send empty data", ->
         connectionCallback = sandbox.spy()
-        Protocol.columnServer "name", "connectionString", connectionCallback
-        Protocol.sendColumn.should.throw(Error)
+        Protocol.columnServer "name", "connectionString", null, connectionCallback
+        ( ->
+            Protocol.sendColumn()
+        ).should.throw "sendColumn called with invalid argument:"
 
     it "should report error when trying to send malformed data", ->
-        cb = () ->
+        connectionCallback = sandbox.spy()
+        Protocol.columnServer "name", "connectionString", null, connectionCallback
+        ( ->
             Protocol.sendColumn(
                 QueryId: 'error'
             )
-        connectionCallback = sandbox.spy()
-        Protocol.columnServer "name", "connectionString", connectionCallback
-        cb.should.throw(Error)
+        ).should.throw "Missing required fields while serializing virtdb.interface.pb.Column"
 
     it "should be able to send meta_data", ->
         connectionCallback = sandbox.spy()
-        Protocol.columnServer "name", "connectionString", connectionCallback
+        Protocol.columnServer "name", "connectionString", null, connectionCallback
         Protocol.sendColumn(
             QueryId: "id"
             Name: "name"
@@ -149,6 +161,13 @@ describe "Protocol for column", ->
             SeqNo: 0
         ) # em1pty array is valid message here
         socket.sent.should.be.true
+
+    it "should throw error if callback is provided and not null", ->
+        connectionCallback = sandbox.spy()
+        callbackNotNull = sandbox.spy()
+        ( ->
+            Protocol.columnServer "name", "connectionString", callbackNotNull, connectionCallback
+        ).should.throw "ColumnServer is a write only protocol and must not be called with message callback."
 
 describe "Protocol for query", ->
     sandbox = null
@@ -167,7 +186,9 @@ describe "Protocol for query", ->
         Protocol.close()
 
     it "should return error if listen called without onBound handler", ->
-        Protocol.queryServer.should.throw(Error)
+        ( ->
+            Protocol.queryServer()
+        ).should.throw "Missing required parameter: onBound"
 
     it "should start listening if handler is given", ->
         dataCallback = (data) ->
