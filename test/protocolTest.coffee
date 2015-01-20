@@ -125,7 +125,7 @@ describe "Protocol for column", ->
 
     it "should start listening if handler is given", ->
         connectionCallback = sandbox.spy()
-        Protocol.columnServer "name", "connectionString", connectionCallback
+        Protocol.columnServer "name", "connectionString", null, connectionCallback
         socket.bound.should.be.true;
         connectionCallback.should.have.been.calledWith("name", socket, 'COLUMN', 'PUB_SUB')
 
@@ -136,14 +136,14 @@ describe "Protocol for column", ->
 
     it "should report error when trying to send empty data", ->
         connectionCallback = sandbox.spy()
-        Protocol.columnServer "name", "connectionString", connectionCallback
+        Protocol.columnServer "name", "connectionString", null, connectionCallback
         ( ->
             Protocol.sendColumn()
         ).should.throw "sendColumn called with invalid argument:"
 
     it "should report error when trying to send malformed data", ->
         connectionCallback = sandbox.spy()
-        Protocol.columnServer "name", "connectionString", connectionCallback
+        Protocol.columnServer "name", "connectionString", null, connectionCallback
         ( ->
             Protocol.sendColumn(
                 QueryId: 'error'
@@ -152,7 +152,7 @@ describe "Protocol for column", ->
 
     it "should be able to send meta_data", ->
         connectionCallback = sandbox.spy()
-        Protocol.columnServer "name", "connectionString", connectionCallback
+        Protocol.columnServer "name", "connectionString", null, connectionCallback
         Protocol.sendColumn(
             QueryId: "id"
             Name: "name"
@@ -161,6 +161,13 @@ describe "Protocol for column", ->
             SeqNo: 0
         ) # em1pty array is valid message here
         socket.sent.should.be.true
+
+    it "should throw error if callback is provided and not null", ->
+        connectionCallback = sandbox.spy()
+        callbackNotNull = sandbox.spy()
+        ( ->
+            Protocol.columnServer "name", "connectionString", callbackNotNull, connectionCallback
+        ).should.throw "ColumnServer is a write only protocol and must not be called with message callback."
 
 describe "Protocol for query", ->
     sandbox = null
