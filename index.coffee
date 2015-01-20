@@ -21,6 +21,7 @@ class VirtDBDataProvider
         Protocol.sendColumn data
 
     close: =>
+        VirtDBConnector.close()
         Protocol.close()
 
     @log = VirtDBConnector.log
