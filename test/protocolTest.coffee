@@ -47,7 +47,8 @@ describe "Protocol for meta_data", ->
 
     it "should start listening if handler is given", ->
         dataCallback = (data) ->
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
         socket.bound.should.be.true;
         connectionCallback.should.have.been.calledWith("name", socket, 'META_DATA', 'REQ_REP')
@@ -59,7 +60,8 @@ describe "Protocol for meta_data", ->
 
     it "should report error when trying to send empty data", ->
         dataCallback = (data) ->
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
         ( ->
             Protocol.sendMetaData()
@@ -67,7 +69,8 @@ describe "Protocol for meta_data", ->
 
     it "should report error when trying to send malformed data", ->
         dataCallback = (data) ->
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
         ( ->
             Protocol.sendMetaData(
@@ -79,14 +82,16 @@ describe "Protocol for meta_data", ->
 
     it "should be able to send meta_data", ->
         dataCallback = (data) ->
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
         Protocol.sendMetaData([]) # empty array is valid message here
         socket.sent.should.be.true
 
     it "should be able to receive meta_data requests", ->
         dataCallback = sandbox.spy()
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
         request =
             Name: "name"
@@ -96,7 +101,8 @@ describe "Protocol for meta_data", ->
 
     it "should send reply even if request is malformed as REQ_REP sockets are picky for this", ->
         dataCallback = sandbox.spy()
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         Protocol.metaDataServer "name", "connectionString", dataCallback, connectionCallback
         request = {}
         socket.callback(proto_meta.serialize(request, "virtdb.interface.pb.MetaData"))
@@ -124,7 +130,8 @@ describe "Protocol for column", ->
         ).should.throw "Missing required parameter: onBound"
 
     it "should start listening if handler is given", ->
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         Protocol.columnServer "name", "connectionString", null, connectionCallback
         socket.bound.should.be.true;
         connectionCallback.should.have.been.calledWith("name", socket, 'COLUMN', 'PUB_SUB')
@@ -135,14 +142,16 @@ describe "Protocol for column", ->
         ).should.throw "column_socket is not yet initialized"
 
     it "should report error when trying to send empty data", ->
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         Protocol.columnServer "name", "connectionString", null, connectionCallback
         ( ->
             Protocol.sendColumn()
         ).should.throw "sendColumn called with invalid argument:"
 
     it "should report error when trying to send malformed data", ->
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         Protocol.columnServer "name", "connectionString", null, connectionCallback
         ( ->
             Protocol.sendColumn(
@@ -151,7 +160,8 @@ describe "Protocol for column", ->
         ).should.throw "Missing required fields while serializing virtdb.interface.pb.Column"
 
     it "should be able to send meta_data", ->
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         Protocol.columnServer "name", "connectionString", null, connectionCallback
         Protocol.sendColumn(
             QueryId: "id"
@@ -163,7 +173,8 @@ describe "Protocol for column", ->
         socket.sent.should.be.true
 
     it "should throw error if callback is provided and not null", ->
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         callbackNotNull = sandbox.spy()
         ( ->
             Protocol.columnServer "name", "connectionString", callbackNotNull, connectionCallback
@@ -192,14 +203,16 @@ describe "Protocol for query", ->
 
     it "should start listening if handler is given", ->
         dataCallback = (data) ->
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         Protocol.queryServer "name", "connectionString", dataCallback, connectionCallback
         socket.bound.should.be.true;
         connectionCallback.should.have.been.calledWith("name", socket, 'QUERY', 'PUSH_PULL')
 
     it "should be able to receive queries", ->
         dataCallback = sandbox.spy()
-        connectionCallback = sandbox.spy()
+        connectionCallback = sandbox.stub()
+        connectionCallback.returns(() -> )
         Protocol.queryServer "name", "connectionString", dataCallback, connectionCallback
         query =
             QueryId: "queryid"
