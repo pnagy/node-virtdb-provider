@@ -20,10 +20,7 @@ class Protocol
             catch ex
                 @metadata_socket.send 'err'
             return
-        @metadata_socket.bind connectionString, (err) =>
-            if err?
-                throw err
-            onBound name, @metadata_socket, 'META_DATA', 'REQ_REP'
+        @metadata_socket.bind connectionString, onBound(name, @metadata_socket, 'META_DATA', 'REQ_REP')
 
     @queryServer = (name, connectionString, onQuery, onBound) =>
         if not onBound?
@@ -36,10 +33,7 @@ class Protocol
             catch ex
                 @query_socket.send 'err'
             return
-        @query_socket.bind connectionString, (err) =>
-            if err?
-                throw err
-            onBound name, @query_socket, 'QUERY', 'PUSH_PULL'
+        @query_socket.bind connectionString, onBound(name, @query_socket, 'QUERY', 'PUSH_PULL')
 
     @columnServer = (name, connectionString, callback, onBound) =>
         if not onBound?
@@ -47,10 +41,7 @@ class Protocol
         if callback?
             throw new Error("ColumnServer is a write only protocol and must not be called with message callback.")
         @column_socket = zmq.socket "pub"
-        @column_socket.bind connectionString, (err) =>
-            if err?
-                throw err
-            onBound name, @column_socket, 'COLUMN', 'PUB_SUB'
+        @column_socket.bind connectionString, onBound(name, @column_socket, 'COLUMN', 'PUB_SUB')
 
     @sendMetaData = (data) =>
         if not @metadata_socket?
