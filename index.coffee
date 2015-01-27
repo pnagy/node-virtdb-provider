@@ -22,10 +22,12 @@ class VirtDBDataProvider
         VirtDBConnector.setupEndpoint @name, Protocol.queryServer, callback
         VirtDBConnector.setupEndpoint @name, Protocol.columnServer
 
-    sendMetaData: (data) ->
+    sendTable: (table) =>
         message =
-            Tables: []
-        message.Tables.concat data
+            Tables: [ data ]
+        @sendMetaData message
+
+    sendMetaData: (table) ->
         Protocol.sendMetaData message
 
     sendColumn: (data) ->
