@@ -24,7 +24,7 @@ class VirtDBDataProvider
 
     sendTableMeta: (table) =>
         message =
-            Tables: [ data ]
+            Tables: [ table ]
         @sendMetaData message
 
     sendMetaData: (table) ->
