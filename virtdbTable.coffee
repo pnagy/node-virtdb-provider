@@ -4,14 +4,10 @@ class VirtDBTable
         @Fields = []
 
     addField: (fieldName, type) =>
-        if type in ['STRING', 'UINT32', 'INT32', 'UINT64', 'INT64']
-            @Fields.push {
-                Name: fieldName
-                Desc:
-                    Type: type
-            }
-            return true
-        else
-            return false
+        @Fields.push  {
+            Name: fieldName
+            Desc:
+                Type: type
+        }
 
 module.exports = VirtDBTable
