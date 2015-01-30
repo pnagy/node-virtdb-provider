@@ -1,4 +1,5 @@
 VirtDBReply = require "../virtdbReply"
+lz4 = require "lz4"
 
 chai = require "chai"
 should = chai.should()
@@ -14,6 +15,14 @@ describe "VirtDBReply", ->
 
     afterEach =>
         sandbox.restore()
+
+    compress = (data) ->
+        input = new Buffer(data)
+        output = new Buffer(lz4.encodeBound(input.length))
+        compSize = lz4.encodeBlock(input, output)
+        output = output.slice(0, compSize)
+        return [output, compSize]
+
 
     it "should be a well-formed column meta when a STRING field is added", ->
         id = "e142fbd0-9d77-11e4-bd06-0800200c9a66"
@@ -34,18 +43,12 @@ describe "VirtDBReply", ->
         reply.data.length.should.equal 2
         reply.data[0].QueryId.should.equal id
         reply.data[0].Name.should.equal 'id'
-        reply.data[0].SeqNo.should.equal 0
         reply.data[0].Data.Type.should.equal 'UINT64'
         reply.data[0].Data.UInt64Value.should.deep.equal []
-        reply.data[0].EndOfData.should.equal true
-        reply.data[0].CompType.should.equal 'NO_COMPRESSION'
         reply.data[1].QueryId.should.equal id
         reply.data[1].Name.should.equal 'name'
-        reply.data[1].SeqNo.should.equal 0
         reply.data[1].Data.Type.should.equal 'STRING'
         reply.data[1].Data.StringValue.should.deep.equal []
-        reply.data[1].EndOfData.should.equal true
-        reply.data[1].CompType.should.equal 'NO_COMPRESSION'
 
     it "should contain items if an object is pushed to it", ->
         id = "e142fbd0-9d77-11e4-bd06-0800200c9a66"
@@ -74,15 +77,97 @@ describe "VirtDBReply", ->
         reply.data.length.should.equal 2
         reply.data[0].QueryId.should.equal id
         reply.data[0].Name.should.equal 'id'
-        reply.data[0].SeqNo.should.equal 0
         reply.data[0].Data.Type.should.equal 'UINT64'
         reply.data[0].Data.UInt64Value.should.deep.equal [5, 4]
-        reply.data[0].EndOfData.should.equal true
-        reply.data[0].CompType.should.equal 'NO_COMPRESSION'
         reply.data[1].QueryId.should.equal id
         reply.data[1].Name.should.equal 'name'
-        reply.data[1].SeqNo.should.equal 0
         reply.data[1].Data.Type.should.equal 'STRING'
         reply.data[1].Data.StringValue.should.deep.equal ['cica', 'kutya']
-        reply.data[1].EndOfData.should.equal true
-        reply.data[1].CompType.should.equal 'NO_COMPRESSION'
+
+    it "should send 5 rows in 5 chunks if chunkSize is 1", ->
+        query_id = "id"
+        sendFn = sinon.spy()
+        query =
+            QueryId: query_id
+            MaxChunkSize: 1
+            Table: "ids"
+            Fields: [
+                Name: "id"
+                Desc:
+                    Type: 'UINT64'
+            ]
+        reply = new VirtDBReply query
+        for id in [1, 2, 3, 4, 5]
+            reply.pushObject { id: id }
+        reply.send sendFn
+        column =
+            QueryId: query_id
+            Name: "id"
+            SeqNo: 0
+            Data: []
+            EndOfData: false
+            CompType: 'LZ4_COMPRESSION'
+        [compressedData, column.UncompressedSize] =
+            compress [1]
+        sendFn.should.have.been.calledWith(sinon.match(column))
+        column.SeqNo = 1
+        [compressedData, column.UncompressedSize] =
+            compress [2]
+        sendFn.should.have.been.calledWith(sinon.match(column))
+        column.SeqNo = 2
+        [compressedData, column.UncompressedSize] =
+            compress [3]
+        sendFn.should.have.been.calledWith(sinon.match(column))
+        column.SeqNo = 3
+        [compressedData, column.UncompressedSize] =
+            compress [4]
+        sendFn.should.have.been.calledWith(sinon.match(column))
+        column.SeqNo = 4
+        [compressedData, column.UncompressedSize] =
+            compress [5]
+        sendFn.should.have.been.calledWith(sinon.match(column))
+        column.SeqNo = 5
+        column.EndOfData = true
+        [compressedData, column.UncompressedSize] =
+            compress []
+        sendFn.should.have.been.calledWith(sinon.match(column))
+
+    it "should send 5 rows in 4 chuks if chunkSize is 2", ->
+        id = "id"
+        sendFn = sinon.spy()
+        query =
+            QueryId: id
+            MaxChunkSize: 2
+            Table: "ids"
+            Fields: [
+                Name: "id"
+                Desc:
+                    Type: 'UINT64'
+            ]
+        reply = new VirtDBReply query
+        for id in [1, 2, 3, 4, 5]
+            reply.pushObject { id: id }
+        reply.send sendFn
+        sendFn.should.have.callCount 4
+
+    it "should send 5 rows with 2 fields in 8 chuks if chunkSize is 2", ->
+        id = "id"
+        sendFn = sinon.spy()
+        query =
+            QueryId: id
+            MaxChunkSize: 2
+            Table: "ids"
+            Fields: [
+                Name: "id"
+                Desc:
+                    Type: 'UINT64'
+            ,
+                Name: "name"
+                Desc:
+                    Type: 'STRING'
+            ]
+        reply = new VirtDBReply query
+        for id in [1, 2, 3, 4, 5]
+            reply.pushObject { id: id, name: "name #{id}" }
+        reply.send sendFn
+        sendFn.should.have.callCount 8
