@@ -9,7 +9,7 @@ class VirtDBDataProvider
         VirtDBConnector.connect(@name, connectionString)
 
     createTable: (name) =>
-        return new VirtdbTable(name)
+        return new VirtDBTable(name)
 
     createReply: (table, query) =>
         return new VirtDBReply(table, query)
