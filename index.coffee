@@ -27,7 +27,7 @@ class VirtDBDataProvider
             Tables: [ table ]
         @sendMetaData message
 
-    sendMetaData: (table) ->
+    sendMetaData: (message) ->
         Protocol.sendMetaData message
 
     sendColumn: (data) ->
