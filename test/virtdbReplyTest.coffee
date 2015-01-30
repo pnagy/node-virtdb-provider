@@ -1,5 +1,7 @@
 VirtDBReply = require "../virtdbReply"
+FieldData = require("virtdb-connector").FieldData
 lz4 = require "lz4"
+CommonProto = (require "virtdb-proto").common
 
 chai = require "chai"
 should = chai.should()
@@ -17,11 +19,12 @@ describe "VirtDBReply", ->
         sandbox.restore()
 
     compress = (data) ->
-        input = new Buffer(data)
+        input = CommonProto.serialize data, "virtdb.interface.pb.ValueType"
+        testData = CommonProto.parse input, "virtdb.interface.pb.ValueType"
         output = new Buffer(lz4.encodeBound(input.length))
         compSize = lz4.encodeBlock(input, output)
         output = output.slice(0, compSize)
-        return [output, compSize]
+        return [output, input.length]
 
 
     it "should be a well-formed column meta when a STRING field is added", ->
@@ -104,35 +107,40 @@ describe "VirtDBReply", ->
             QueryId: query_id
             Name: "id"
             SeqNo: 0
-            Data: []
             EndOfData: false
             CompType: 'LZ4_COMPRESSION'
+        data = FieldData.createInstance column.Name, 'UINT64'
+        data.pushArray [1]
         [compressedData, column.UncompressedSize] =
-            compress [1]
+            compress data
         sendFn.should.have.been.calledWith(sinon.match(column))
         column.SeqNo = 1
+        data = FieldData.createInstance column.Name, 'UINT64'
+        data.pushArray [2]
         [compressedData, column.UncompressedSize] =
-            compress [2]
+            compress data
         sendFn.should.have.been.calledWith(sinon.match(column))
         column.SeqNo = 2
+        data = FieldData.createInstance column.Name, 'UINT64'
+        data.pushArray [3]
         [compressedData, column.UncompressedSize] =
-            compress [3]
+            compress data
         sendFn.should.have.been.calledWith(sinon.match(column))
         column.SeqNo = 3
+        data = FieldData.createInstance column.Name, 'UINT64'
+        data.pushArray [4]
         [compressedData, column.UncompressedSize] =
-            compress [4]
+            compress data
         sendFn.should.have.been.calledWith(sinon.match(column))
         column.SeqNo = 4
-        [compressedData, column.UncompressedSize] =
-            compress [5]
-        sendFn.should.have.been.calledWith(sinon.match(column))
-        column.SeqNo = 5
         column.EndOfData = true
+        data = FieldData.createInstance column.Name, 'UINT64'
+        data.pushArray [5]
         [compressedData, column.UncompressedSize] =
-            compress []
+            compress data
         sendFn.should.have.been.calledWith(sinon.match(column))
 
-    it "should send 5 rows in 4 chuks if chunkSize is 2", ->
+    it "should send 5 rows in 3 chuks if chunkSize is 2", ->
         id = "id"
         sendFn = sinon.spy()
         query =
@@ -148,9 +156,9 @@ describe "VirtDBReply", ->
         for id in [1, 2, 3, 4, 5]
             reply.pushObject { id: id }
         reply.send sendFn
-        sendFn.should.have.callCount 4
+        sendFn.should.have.callCount 3
 
-    it "should send 5 rows with 2 fields in 8 chuks if chunkSize is 2", ->
+    it "should send 5 rows with 2 fields in 6 chuks if chunkSize is 2", ->
         id = "id"
         sendFn = sinon.spy()
         query =
@@ -170,4 +178,4 @@ describe "VirtDBReply", ->
         for id in [1, 2, 3, 4, 5]
             reply.pushObject { id: id, name: "name #{id}" }
         reply.send sendFn
-        sendFn.should.have.callCount 8
+        sendFn.should.have.callCount 6
