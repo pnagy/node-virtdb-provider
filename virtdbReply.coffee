@@ -1,5 +1,6 @@
 FieldData = require("virtdb-connector").FieldData
 lz4 = require "lz4"
+CommonProto = (require "virtdb-proto").common
 
 class VirtDBReply
     data: null
@@ -24,36 +25,27 @@ class VirtDBReply
             item.Data.push row[item.Name]
 
     compress = (data) ->
-        input = new Buffer(data)
+        input = CommonProto.serialize data, "virtdb.interface.pb.ValueType"
+        testData = CommonProto.parse input, "virtdb.interface.pb.ValueType"
         output = new Buffer(lz4.encodeBound(input.length))
         compSize = lz4.encodeBlock(input, output)
         output = output.slice(0, compSize)
-        return [output, compSize]
+        return [output, input.length]
 
     send: (sendFn, endOfData = true) =>
         for column in @data
             index = 0
             while column.Data.getArray().length > 0
-                uncompressedData = column.Data.getArray().splice(0, @maxChunkSize)
+                uncompressedData = FieldData.createInstance(column.Name, column.Data.Type)
+                uncompressedData.pushArray column.Data.getArray().splice(0, @maxChunkSize)
                 sendColumn =
                     QueryId: @queryId
                     Name: column.Name
                     SeqNo: @seqNo + index
-                    Data: []
-                    EndOfData: false
-                    CompType: 'LZ4_COMPRESSION'
-                [sendColumn.CompressedData, sendColumn.UncompressedSize] =
-                    compress uncompressedData
-                sendFn sendColumn
-                index += 1
-            if endOfData
-                uncompressedData = []
-                sendColumn =
-                    QueryId: @queryId
-                    Name: column.Name
-                    SeqNo: @seqNo + index
-                    Data: []
-                    EndOfData: true
+                    Data:
+                        Name: column.Name
+                        Type: column.Data.Type
+                    EndOfData: column.Data.getArray().length == 0
                     CompType: 'LZ4_COMPRESSION'
                 [sendColumn.CompressedData, sendColumn.UncompressedSize] =
                     compress uncompressedData
