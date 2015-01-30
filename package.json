@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "async": "^0.9.0",
+    "lz4": "^0.3.14",
     "node-protobuf": "^1.2.0",
     "virtdb-connector": "git://github.com/starschema/node-virtdb-connector",
     "virtdb-proto": "git://github.com/starschema/virtdb-proto",

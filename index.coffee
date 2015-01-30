@@ -33,10 +33,6 @@ class VirtDBDataProvider
     sendColumn: (data) ->
         Protocol.sendColumn data
 
-    send: (reply) ->
-        for column in reply.data
-            Protocol.sendColumn column
-
     close: =>
         VirtDBConnector.close()
         Protocol.close()
