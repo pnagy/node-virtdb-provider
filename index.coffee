@@ -38,5 +38,6 @@ class VirtDBDataProvider
         Protocol.close()
 
     @log = VirtDBConnector.log
+    @FieldData = VirtDBConnector.FieldData
 
 module.exports = VirtDBDataProvider
