@@ -109,32 +109,32 @@ describe "VirtDBReply", ->
             SeqNo: 0
             EndOfData: false
             CompType: 'LZ4_COMPRESSION'
-        data = FieldData.createInstance column.Name, 'UINT64'
+        data = FieldData.createInstance 'UINT64'
         data.pushArray [1]
         [compressedData, column.UncompressedSize] =
             compress data
         sendFn.should.have.been.calledWith(sinon.match(column))
         column.SeqNo = 1
-        data = FieldData.createInstance column.Name, 'UINT64'
+        data = FieldData.createInstance 'UINT64'
         data.pushArray [2]
         [compressedData, column.UncompressedSize] =
             compress data
         sendFn.should.have.been.calledWith(sinon.match(column))
         column.SeqNo = 2
-        data = FieldData.createInstance column.Name, 'UINT64'
+        data = FieldData.createInstance 'UINT64'
         data.pushArray [3]
         [compressedData, column.UncompressedSize] =
             compress data
         sendFn.should.have.been.calledWith(sinon.match(column))
         column.SeqNo = 3
-        data = FieldData.createInstance column.Name, 'UINT64'
+        data = FieldData.createInstance 'UINT64'
         data.pushArray [4]
         [compressedData, column.UncompressedSize] =
             compress data
         sendFn.should.have.been.calledWith(sinon.match(column))
         column.SeqNo = 4
         column.EndOfData = true
-        data = FieldData.createInstance column.Name, 'UINT64'
+        data = FieldData.createInstance 'UINT64'
         data.pushArray [5]
         [compressedData, column.UncompressedSize] =
             compress data

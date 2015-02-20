@@ -17,7 +17,7 @@ class VirtDBReply
             column =
                 QueryId: query.QueryId
                 Name: field.Name
-                Data: FieldData.createInstance(field.Name, field.Desc.Type)
+                Data: FieldData.createInstance(field.Desc.Type)
             @data.push column
 
     pushObject: (row) =>
@@ -36,7 +36,7 @@ class VirtDBReply
         for column in @data
             index = 0
             while column.Data.getArray().length > 0
-                uncompressedData = FieldData.createInstance(column.Name, column.Data.Type)
+                uncompressedData = FieldData.createInstance(column.Data.Type)
                 uncompressedData.pushArray column.Data.getArray().splice(0, @maxChunkSize)
                 sendColumn =
                     QueryId: @queryId
