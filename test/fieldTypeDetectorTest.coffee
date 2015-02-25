@@ -31,13 +31,6 @@ describe "FieldTypeDetector", ->
         detector.addSample {'Field1' : ['0']}
         detector.getFieldType('Field1').should.equal('UINT32')
 
-    # it "with only a null value field type should be STRING", ->
-    #     detector = new FieldTypeDetector
-    #     detector.addSample {'Field1' : ['-42','','42'] }
-    #     detector.getFieldType('Field1').should.equal('INT32')
-    #     detector.getFieldType('Field2').should.equal('STRING')
-    #     detector.getFieldType('Field3').should.equal('UINT32')
-
     it "null fields should not change field type", ->
         detector = new FieldTypeDetector
         detector.addSample {'Field1' : ['-42']}
