@@ -1,15 +1,5 @@
 class FieldTypeDetector
-    samples: null
-
-    constructor: ()->
-        @samples = {}
-
-    addSample: (samples) =>
-        for header, fields of samples
-            @samples[header] ?= []
-            for field in fields
-                @samples[header].push field
-
+    
     _fieldTypes = (value) ->
         possibleTypes =
             UINT32: false
@@ -44,9 +34,8 @@ class FieldTypeDetector
                         possibleTypes['DOUBLE'] = true
         return possibleTypes
 
-    getFieldType: (name) =>
+    @get: (values) =>
         typesInOrder = ['UINT32', 'UINT64', 'INT32', 'INT64', 'FLOAT', 'DOUBLE']
-        values = @samples?[name]
         if values? and values.length > 0
             hasValues = false
             possibleTypes =

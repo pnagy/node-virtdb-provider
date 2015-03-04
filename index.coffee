@@ -31,7 +31,6 @@ class VirtDBDataProvider
 
     @log = VirtDBConnector.log
     @FieldData = VirtDBConnector.FieldData
-    @FieldTypeDetector = require "./fieldTypeDetector"
     @VirtDBTable = require './virtdbTable'
     @VirtDBReply = require './virtdbReply'
 
