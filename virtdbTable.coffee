@@ -1,6 +1,6 @@
 class VirtDBTable
     Fields: null
-    constructor: (@Name) ->
+    constructor: (@Name, @Schema) ->
         @Fields = []
 
     addField: (fieldName, type) =>
